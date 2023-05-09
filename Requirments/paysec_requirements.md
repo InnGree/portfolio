@@ -1,20 +1,4 @@
 # Paysec as a new withdraw method
-## Contents
-1. General information
-    1.1. Glossary
-    1.2. Version history
-2. Context
-3. Concept
-    3.1. Processes schemes
-    3.2. Business rules
-    3.3. API documentation
-4. Requirements
-    4.1. Withdraw method selection
-    4.2. Adding a new Paysec account as the withdraw method
-    4.3. Verification check
-    4.4. Choosing existing Paysec account as the withdraw method 
-    4.4. Monthly AR withdrawals
-5. Risks and countermeasures
 
 ## 1. General information
 ### 1.1. Glossary
