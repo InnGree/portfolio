@@ -1,0 +1,102 @@
+@startuml withdraw_method_choosing
+Actor "User" as User
+Participant "Agency" as Agency
+Database "Agency" as DB_A
+Participant "New service" as NS
+Database "New service DB" as DB_NS
+Participant "Parysec" as Paysec
+
+Activate User 
+Activate Agency
+User -> Agency: "Open withdraw method page"
+Agency --> User: "Show withdraw method page"
+User -> Agency: "Choose Parysec method - New account "
+Agency --> User: "Open form for phone number"
+User -> Agency: "Enter phone number"
+
+Activate NS
+
+Agency -> NS: "Send invite request"
+Activate Paysec
+NS -> Paysec: "Contractor invite request"
+note left
+POST /api.parysec/v2/contractor_invites
+{name: agency_id, phone: user_phone}
+end note
+Paysec --> User: "Send invite"
+alt "201 CREATED"
+    Paysec --> NS: "Invite ID" 
+    NS --> Agency: "Invite sent"
+    Activate DB_NS
+    NS -> DB_NS: "Add contractor"
+    note over NS #PaleTurquoise
+    INSERT INTO contractors 
+    VALUES (agency_id, user_phone, 'unverified')
+    end note
+    Deactivate DB_NS
+    Deactivate NS
+    Deactivate Paysec
+    Agency --> User: "Invite to the Parysec sent via SMS. Please verify your account."
+    Deactivate User
+    Deactivate Agency
+    loop "Each 15 minutes"        
+        Activate NS
+        Activate DB_NS
+        NS -> DB_NS: "Select unverified contractors"
+        note left #PaleTurquoise
+        SELECT phone FROM contractors 
+        WHERE status = 'unverified'
+        end note 
+        DB_NS --> NS: "Phone numbers list"
+        Deactivate DB_NS
+        Activate Paysec
+        NS -> Paysec: "Request the contractor by user's phone number"
+        note left
+        GET api.paysectern/v2/contractors?
+        phone=phone_numbers_list
+        end note
+        Paysec --> NS: "Contractors list"
+        NS -> Paysec: "Sign confirmed contracts from our side"
+        note over NS
+        POST /api.parysec/v2/sign_contracts?
+        contracts_id
+        //For contractors who confirm our contract// 
+        //inside of the Parysec service.//
+        end note
+        Paysec --> NS: "201 SIGNED"
+        Activate DB_NS
+        NS -> DB_NS: "Update contractor status"
+        note left #PaleTurquoise
+        UPDATE contractors SET status = 'verified' 
+        WHERE phone IN (phones_who_confirmed)
+        end note
+        Deactivate DB_NS
+        Activate Agency
+        NS --> Agency: "Update withdraw method: Parysec"
+        note right
+        POST /api.service/v2/withdraw_method_change
+        {users: user_ids, withdraw_method: 'Parysec'}
+        end note
+        Activate DB_A
+        Agency -> DB_A: "Update withdraw_method"
+        Deactivate DB_A
+        Deactivate Agency
+    end
+else "400 BAD REQUEST"
+    Activate Paysec
+    Activate NS
+    Paysec --> NS: "VALIDATION_ERROR" 
+    Deactivate Paysec 
+    Activate Agency
+    NS --> Agency: "Contractor has been already invited"  
+    Deactivate NS
+    Activate User
+    Agency --> User: "You already have Paysec account for this number."
+    note right of User #LavenderBlush
+    We ask user to enter a new number 
+    or go to "Existing Parysec account" scenario.
+    end note
+    Deactivate Agency
+    Deactivate User
+end
+@enduml
