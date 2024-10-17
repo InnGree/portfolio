@@ -19,6 +19,9 @@ The folder contains PowerBI report file **conversion.pbix report**. This report 
 PDF version of the report applied for a quick view.
 Datasource for the report is [here](https://www.kaggle.com/datasets/aerodinamicc/ecommerce-website-funnel-analysis).
 
+## Python-regressions
+This section contains python code to perform linear and logistic regressions (and source .csv files). I've written code in Jupyter Notebook. 
+
 ## Python-scripts
 Here I attached python script **bank_marketing_campaigns_analysis.ipynb** I've written in Google Colab to process and analyze marketing campaign data.
 
